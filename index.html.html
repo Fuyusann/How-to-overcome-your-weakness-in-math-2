@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>数と式 診断テスト</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --c-bg: #ffffff;
+      --c-bg2: #f5f5f0;
+      --c-bg3: #eeede8;
+      --c-txt: #1a1a18;
+      --c-txt2: #6b6b66;
+      --c-border: rgba(0,0,0,0.12);
+      --c-border2: rgba(0,0,0,0.22);
+      --accent: #185FA5;
+      --accent-light: #E6F1FB;
+      --accent-text: #0C447C;
+      --green: #3B6D11;
+      --green-light: #EAF3DE;
+      --green-text: #27500A;
+      --red: #A32D2D;
+      --red-light: #FCEBEB;
+      --red-text: #791F1F;
+      --amber: #854F0B;
+      --amber-light: #FAEEDA;
+      --amber-text: #633806;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --c-bg: #1e1e1c;
+        --c-bg2: #2a2a28;
+        --c-bg3: #333330;
+        --c-txt: #f0efe8;
+        --c-txt2: #a0a09a;
+        --c-border: rgba(255,255,255,0.12);
+        --c-border2: rgba(255,255,255,0.22);
+        --accent: #378ADD;
+        --accent-light: #0C2A44;
+        --accent-text: #85B7EB;
+        --green: #97C459;
+        --green-light: #173404;
+        --green-text: #C0DD97;
+        --red: #F09595;
+        --red-light: #3a1010;
+        --red-text: #F7C1C1;
+        --amber: #EF9F27;
+        --amber-light: #2a1a04;
+        --amber-text: #FAC775;
+      }
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--c-bg3);
+      color: var(--c-txt);
+      min-height: 100vh;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    #app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: var(--c-bg);
+      border: 0.5px solid var(--c-border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1rem;
+    }
+    .topbar-title { font-size: 15px; font-weight: 500; }
+    .topbar-sub { font-size: 12px; color: var(--c-txt2); }
+    .timer-box { display: flex; align-items: center; gap: 6px; }
+    .timer-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+    }
+    .timer-dot.warn { background: #EF9F27; }
+    .timer-dot.danger { background: #E24B4A; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .timer-num { font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+    /* ── PROGRESS ── */
+    .progress-wrap { margin-bottom: 1rem; }
+    .progress-meta {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--c-txt2); margin-bottom: 6px;
+    }
+    .progress-track { height: 4px; background: var(--c-bg2); border-radius: 2px; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+
+    /* ── QUESTION CARD ── */
+    .q-card {
+      background: var(--c-bg);
+      border: 0.5px solid var(--c-border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .q-tags { margin-bottom: 0.75rem; display: flex; gap: 6px; flex-wrap: wrap; }
+    .q-tag {
+      display: inline-block; font-size: 11px; padding: 3px 10px;
+      border-radius: var(--radius-md);
+      background: var(--accent-light); color: var(--accent-text);
+      font-weight: 500;
+    }
+    .q-grade-badge {
+      display: inline-block; font-size: 11px; padding: 3px 10px;
+      border-radius: var(--radius-md);
+      background: var(--c-bg2); color: var(--c-txt2);
+    }
+    .q-text { font-size: 16px; line-height: 1.7; margin-bottom: 1rem; }
+
+    /* ── CHOICES ── */
+    .choices { display: flex; flex-direction: column; gap: 8px; }
+    .choice-btn {
+      width: 100%; text-align: left; padding: 0.75rem 1rem;
+      background: var(--c-bg);
+      border: 0.5px solid var(--c-border2);
+      border-radius: var(--radius-md);
+      font-size: 15px; color: var(--c-txt);
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+      font-family: inherit; line-height: 1.5;
+    }
+    .choice-btn:hover:not(:disabled) { background: var(--c-bg2); }
+    .choice-btn.correct {
+      border-color: var(--green); background: var(--green-light); color: var(--green-text);
+    }
+    .choice-btn.wrong {
+      border-color: var(--red); background: var(--red-light); color: var(--red-text);
+    }
+    .choice-btn:disabled { cursor: default; }
+
+    /* ── FEEDBACK ── */
+    .feedback-box {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 14px; line-height: 1.6;
+      margin-bottom: 1rem; display: none;
+    }
+    .feedback-box.show { display: block; }
+    .feedback-box.ok { background: var(--green-light); color: var(--green-text); border: 0.5px solid #97C459; }
+    .feedback-box.ng { background: var(--red-light); color: var(--red-text); border: 0.5px solid #F09595; }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      width: 100%; padding: 0.85rem;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-md);
+      font-size: 15px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.38; cursor: default; }
+    .btn-secondary {
+      padding: 0.75rem 1.5rem;
+      background: transparent; color: var(--c-txt);
+      border: 0.5px solid var(--c-border2);
+      border-radius: var(--radius-md);
+      font-size: 14px; cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: var(--c-bg2); }
+
+    /* ── START SCREEN ── */
+    .start-hero { text-align: center; padding: 2rem 0 1.5rem; }
+    .start-icon { font-size: 48px; margin-bottom: 0.75rem; }
+    .start-title { font-size: 22px; font-weight: 500; margin-bottom: 0.5rem; }
+    .start-desc { font-size: 14px; color: var(--c-txt2); line-height: 1.7; margin-bottom: 2rem; }
+
+    .info-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; margin-bottom: 1.5rem;
+    }
+    .info-card {
+      background: var(--c-bg2);
+      border-radius: var(--radius-md);
+      padding: 0.85rem; text-align: center;
+    }
+    .info-card-num { font-size: 22px; font-weight: 500; color: var(--accent); }
+    .info-card-lbl { font-size: 11px; color: var(--c-txt2); margin-top: 2px; }
+
+    .unit-list-title { font-size: 13px; color: var(--c-txt2); margin-bottom: 8px; font-weight: 500; }
+    .unit-chips { margin-bottom: 1.5rem; }
+    .unit-chip {
+      display: inline-block; font-size: 12px; padding: 4px 10px; margin: 3px;
+      background: var(--c-bg2); border: 0.5px solid var(--c-border);
+      border-radius: var(--radius-md); color: var(--c-txt2);
+    }
+
+    /* ── RESULT SCREEN ── */
+    .result-header { text-align: center; padding: 1.5rem 0 1.25rem; }
+    .score-circle {
+      width: 100px; height: 100px; border-radius: 50%;
+      border: 3px solid var(--accent);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .score-big { font-size: 28px; font-weight: 500; color: var(--accent); }
+    .score-denom { font-size: 12px; color: var(--c-txt2); }
+    .result-title { font-size: 18px; font-weight: 500; margin-bottom: 0.25rem; }
+    .result-sub { font-size: 13px; color: var(--c-txt2); }
+
+    .section-title {
+      font-size: 12px; font-weight: 500; color: var(--c-txt2);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin: 1.5rem 0 0.6rem;
+    }
+
+    /* ── UNIT ROWS ── */
+    .unit-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0.75rem 1rem;
+      background: var(--c-bg); border: 0.5px solid var(--c-border);
+      border-radius: var(--radius-md); margin-bottom: 6px;
+    }
+    .unit-row-icon { font-size: 15px; flex-shrink: 0; width: 20px; text-align: center; }
+    .unit-row-info { flex: 1; min-width: 0; }
+    .unit-row-name { font-size: 14px; font-weight: 500; }
+    .unit-row-sub { font-size: 12px; color: var(--c-txt2); }
+    .unit-bar-wrap { width: 70px; flex-shrink: 0; }
+    .unit-bar-track { height: 5px; background: var(--c-bg2); border-radius: 3px; }
+    .unit-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+    .unit-pct { font-size: 12px; font-weight: 500; min-width: 34px; text-align: right; flex-shrink: 0; }
+
+    /* ── REVIEW CARDS ── */
+    .review-card {
+      background: var(--red-light); border: 0.5px solid #F09595;
+      border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 8px;
+    }
+    .review-card.medium { background: var(--amber-light); border-color: #FAC775; }
+    .review-card.good { background: var(--green-light); border-color: #97C459; }
+    .review-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .priority-badge {
+      font-size: 11px; padding: 2px 8px;
+      border-radius: var(--radius-md); font-weight: 500;
+    }
+    .badge-high { background: #F09595; color: var(--red-text); }
+    .badge-medium { background: #FAC775; color: var(--amber-text); }
+    .badge-ok { background: #97C459; color: var(--green-text); }
+    .review-unit-name { font-size: 14px; font-weight: 500; }
+    .review-desc { font-size: 13px; color: var(--c-txt2); line-height: 1.5; margin-bottom: 0.5rem; }
+    .review-tips { font-size: 13px; color: var(--c-txt2); }
+    .review-tips ul { padding-left: 1.2rem; }
+    .review-tips li { margin-bottom: 3px; line-height: 1.6; }
+
+    /* ── RESULT FOOTER ── */
+    .result-footer {
+      display: flex; gap: 10px;
+      margin-top: 1.5rem; padding-bottom: 2rem;
+    }
+    .result-footer .btn-secondary { flex: 1; }
+    .result-footer .btn-primary { flex: 2; font-size: 14px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 400px) {
+      .info-card-num { font-size: 18px; }
+      .q-text { font-size: 15px; }
+      .choice-btn { font-size: 14px; padding: 0.7rem 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ START ══ -->
+  <div id="screen-start" class="screen active">
+    <div class="start-hero">
+      <div class="start-icon">📐</div>
+      <div class="start-title">数と式 診断テスト</div>
+      <div class="start-desc">
+        中学1〜3年「文字と式」の理解度を診断します。<br>
+        間違えた単元を自動で分析し、復習ポイントを表示します。
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-num">15</div>
+        <div class="info-card-lbl">問題数</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-num">30</div>
+        <div class="info-card-lbl">分以内</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-num">5</div>
+        <div class="info-card-lbl">単元</div>
+      </div>
+    </div>
+    <div class="unit-chips">
+      <div class="unit-list-title">出題単元</div>
+      <span class="unit-chip">文字式の基本（中1）</span>
+      <span class="unit-chip">文字式の計算（中1）</span>
+      <span class="unit-chip">文字式の利用（中1）</span>
+      <span class="unit-chip">多項式の計算（中2）</span>
+      <span class="unit-chip">式の展開・因数分解（中3）</span>
+    </div>
+    <button class="btn-primary" onclick="startTest()">テストを始める</button>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="screen-quiz" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="q-unit-label">単元名</div>
+        <div class="topbar-sub" id="q-grade-label">中学1年</div>
+      </div>
+      <div class="timer-box">
+        <div class="timer-dot" id="timer-dot"></div>
+        <div class="timer-num" id="timer-display">30:00</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="q-num-label">問題 1 / 15</span>
+        <span id="q-correct-label">正解 0 問</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="q-card">
+      <div class="q-tags">
+        <span class="q-tag" id="q-tag">単元</span>
+        <span class="q-grade-badge" id="q-grade-badge">中1</span>
+      </div>
+      <div class="q-text" id="q-text">問題文</div>
+      <div class="choices" id="choices"></div>
+    </div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <button class="btn-primary" id="btn-next" onclick="nextQuestion()" disabled>次の問題へ</button>
+  </div>
+
+  <!-- ══ RESULT ══ -->
+  <div id="screen-result" class="screen">
+    <div class="result-header">
+      <div class="score-circle">
+        <div class="score-big" id="score-big">0</div>
+        <div class="score-denom">/ 15点</div>
+      </div>
+      <div class="result-title" id="result-title">結果</div>
+      <div class="result-sub" id="result-sub"></div>
+    </div>
+
+    <div class="section-title">単元別 正答率</div>
+    <div id="unit-analysis"></div>
+
+    <div class="section-title">復習おすすめ単元</div>
+    <div id="review-section"></div>
+
+    <div class="result-footer">
+      <button class="btn-secondary" onclick="goStart()">最初に戻る</button>
+      <button class="btn-primary" onclick="retryTest()">もう一度テスト</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ─────────────── DATA ─────────────── */
+  const UNITS = {
+    u1: { name: '文字式の基本',      grade: '中1', desc: '文字を使った式の意味・書き方の基本ルール' },
+    u2: { name: '文字式の計算',      grade: '中1', desc: '文字式の加減・同類項のまとめ方・分配法則' },
+    u3: { name: '文字式の利用',      grade: '中1', desc: '文章を式で表す・数量関係の表現' },
+    u4: { name: '多項式の計算',      grade: '中2', desc: '多項式の加減乗除・かっこを含む計算' },
+    u5: { name: '式の展開・因数分解', grade: '中3', desc: '乗法公式・因数分解の手法と逆演算の意識' }
+  };
+
+  const REVIEW_TIPS = {
+    u1: ['文字×数字は数字を前に書く（例：x×3 → 3x）', '×記号は省略、÷は分数で表す', '係数1・−1は書かない（1x→x、−1x→−x）'],
+    u2: ['同類項（文字の種類・次数が同じ）だけまとめられる', 'かっこを外すとき前の符号に注意（−(a−b)=−a+b）', '分配法則 a(b+c)=ab+ac をしっかり確認'],
+    u3: ['何をaやbで表すかを最初に明確にする', '偶数=2n、奇数=2n+1の表し方を覚える', '面積・周の長さの公式と組み合わせて考える'],
+    u4: ['多項式−多項式はかっこ内の全項の符号を逆にする', '÷は逆数をかける形に直してから計算する', '計算ミスは最後に符号を一つずつ確認して防ぐ'],
+    u5: ['乗法公式3パターン（和の平方・差の平方・和と差の積）を暗記', '因数分解は展開の逆と意識する', '共通因数は最初に括り出してから公式を使う']
+  };
+
+  const QUESTIONS = [
+    { id:1,  unit:'u1', text:'次の中で、正しい文字式の書き方はどれか。',
+      choices:['a × b = ab', 'a × 1 = 1a', 'a ÷ b = b / a', '1 × a = a1'], answer:0,
+      explanation:'文字式では × 記号を省略し、数字は文字の前に書く。a×b は ab と表す。' },
+    { id:2,  unit:'u1', text:'x の係数が −3 である式はどれか。',
+      choices:['3x', '−3x', 'x − 3', '3 − x'], answer:1,
+      explanation:'係数とは文字にかけられている数のこと。−3x の係数は −3。' },
+    { id:3,  unit:'u1', text:'次の式のうち、項の数がちょうど2つのものはどれか。',
+      choices:['3x', '3x + 2', '3x + 2y + 1', '2xy'], answer:1,
+      explanation:'3x+2 は「3x」と「2」の2つの項からなる2項式。' },
+    { id:4,  unit:'u2', text:'3x + 5x を計算すると？',
+      choices:['8x²', '8x', '15x', '15x²'], answer:1,
+      explanation:'同類項の係数を足す。3x + 5x = (3+5)x = 8x。' },
+    { id:5,  unit:'u2', text:'5a − 2b + 3a − b を整理すると？',
+      choices:['8a − 3b', '8a − b', '2a − 3b', '5a − 3b'], answer:0,
+      explanation:'a の項：5a+3a=8a、b の項：−2b−b=−3b。よって 8a−3b。' },
+    { id:6,  unit:'u2', text:'2(3x − 4) を展開すると？',
+      choices:['6x − 4', '6x − 8', '5x − 6', '6x + 8'], answer:1,
+      explanation:'分配法則：2×3x=6x、2×(−4)=−8。よって 6x−8。' },
+    { id:7,  unit:'u3', text:'1個 a 円のりんごを3個と、1個 b 円のみかんを5個買ったときの合計金額は？',
+      choices:['3a + 5b 円', 'a + b 円', '8ab 円', '15ab 円'], answer:0,
+      explanation:'りんご3個で 3a 円、みかん5個で 5b 円。合計は 3a+5b 円。' },
+    { id:8,  unit:'u3', text:'n を整数とするとき、連続する2つの偶数を式で表すと？',
+      choices:['n と n+1', '2n と 2n+2', '2n+1 と 2n+3', 'n と n+2'], answer:1,
+      explanation:'偶数は2の倍数なので 2n。その次の偶数は 2n+2。' },
+    { id:9,  unit:'u3', text:'縦 a cm、横 b cm の長方形の周の長さを式で表すと？',
+      choices:['ab cm', '2ab cm', '2(a + b) cm', 'a + b cm'], answer:2,
+      explanation:'周の長さ＝(縦＋横)×2 = 2(a+b)。' },
+    { id:10, unit:'u4', text:'(2x + 3y) − (x − y) を計算すると？',
+      choices:['x + 4y', '3x + 2y', 'x + 2y', '3x + 4y'], answer:0,
+      explanation:'かっこを外すと 2x+3y−x+y。同類項をまとめて x+4y。' },
+    { id:11, unit:'u4', text:'6x²y ÷ 3x を計算すると？',
+      choices:['2xy', '2x²', '3xy', '2y'], answer:0,
+      explanation:'6x²y ÷ 3x = (6÷3)×(x²÷x)×y = 2xy。' },
+    { id:12, unit:'u4', text:'(3a + b) × 2 − (a − 2b) × 3 を計算すると？',
+      choices:['9a − 4b', '3a + 8b', '3a − 4b', '9a + 8b'], answer:1,
+      explanation:'6a+2b−3a+6b = 3a+8b。後半のかっこの符号変化に注意。' },
+    { id:13, unit:'u5', text:'(x + 3)(x + 4) を展開すると？',
+      choices:['x² + 7x + 12', 'x² + 7x + 7', 'x² + 12x + 7', 'x² + 12'], answer:0,
+      explanation:'乗法公式 (x+a)(x+b)=x²+(a+b)x+ab。3+4=7、3×4=12。' },
+    { id:14, unit:'u5', text:'x² − 9 を因数分解すると？',
+      choices:['(x+9)(x−1)', '(x+3)(x−3)', '(x−3)²', '(x+3)²'], answer:1,
+      explanation:'a²−b²=(a+b)(a−b)の公式。x²−9=x²−3²=(x+3)(x−3)。' },
+    { id:15, unit:'u5', text:'x² + 6x + 9 を因数分解すると？',
+      choices:['(x+3)(x+3)', '(x+9)(x+1)', '(x+3)(x−3)', '(x+6)(x+3)'], answer:0,
+      explanation:'(x+a)²=x²+2ax+a²の公式。6=2×3、9=3²なので (x+3)²。' }
+  ];
+
+  /* ─────────────── STATE ─────────────── */
+  let currentQ = 0;
+  let answers  = [];
+  let timerSec = 1800;
+  let timerInterval = null;
+  let answered = false;
+
+  /* ─────────────── UTILS ─────────────── */
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  /* ─────────────── START ─────────────── */
+  function startTest() {
+    currentQ = 0;
+    answers  = new Array(QUESTIONS.length).fill(null);
+    timerSec = 1800;
+    answered = false;
+    show('screen-quiz');
+    startTimer();
+    renderQuestion();
+  }
+
+  function retryTest() { startTest(); }
+  function goStart()   { clearInterval(timerInterval); show('screen-start'); }
+
+  /* ─────────────── TIMER ─────────────── */
+  function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timerSec--;
+      if (timerSec <= 0) { clearInterval(timerInterval); finishTest(); return; }
+      updateTimer();
+    }, 1000);
+    updateTimer();
+  }
+
+  function updateTimer() {
+    const m = Math.floor(timerSec / 60);
+    const s = timerSec % 60;
+    document.getElementById('timer-display').textContent =
+      m + ':' + String(s).padStart(2, '0');
+    const dot = document.getElementById('timer-dot');
+    dot.className = 'timer-dot';
+    if      (timerSec < 300) dot.classList.add('danger');
+    else if (timerSec < 600) dot.classList.add('warn');
+  }
+
+  /* ─────────────── QUESTION ─────────────── */
+  function renderQuestion() {
+    const q    = QUESTIONS[currentQ];
+    const unit = UNITS[q.unit];
+    answered   = false;
+
+    document.getElementById('q-unit-label').textContent  = unit.name;
+    document.getElementById('q-grade-label').textContent = unit.grade;
+    document.getElementById('q-tag').textContent          = unit.name;
+    document.getElementById('q-grade-badge').textContent  = unit.grade;
+    document.getElementById('q-text').textContent =
+      (currentQ + 1) + '．' + q.text;
+
+    const correct = answers.filter(a => a === true).length;
+    document.getElementById('q-num-label').textContent     = '問題 ' + (currentQ + 1) + ' / ' + QUESTIONS.length;
+    document.getElementById('q-correct-label').textContent = '正解 ' + correct + ' 問';
+    document.getElementById('progress-fill').style.width   =
+      Math.round((currentQ / QUESTIONS.length) * 100) + '%';
+
+    const fb = document.getElementById('feedback-box');
+    fb.className = 'feedback-box';
+    fb.textContent = '';
+
+    const btn = document.getElementById('btn-next');
+    btn.disabled    = true;
+    btn.textContent = currentQ < QUESTIONS.length - 1 ? '次の問題へ' : '結果を見る';
+
+    const choicesEl = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    const labels = ['ア', 'イ', 'ウ', 'エ'];
+    q.choices.forEach((c, i) => {
+      const b = document.createElement('button');
+      b.className   = 'choice-btn';
+      b.textContent = labels[i] + '．' + c;
+      b.onclick     = () => selectAnswer(i);
+      choicesEl.appendChild(b);
+    });
+  }
+
+  function selectAnswer(idx) {
+    if (answered) return;
+    answered = true;
+    const q         = QUESTIONS[currentQ];
+    const isCorrect = idx === q.answer;
+    answers[currentQ] = isCorrect;
+
+    document.querySelectorAll('.choice-btn').forEach((b, i) => {
+      b.disabled = true;
+      if (i === q.answer)              b.classList.add('correct');
+      else if (i === idx && !isCorrect) b.classList.add('wrong');
+    });
+
+    const fb = document.getElementById('feedback-box');
+    fb.textContent = (isCorrect ? '✓ 正解！　' : '✗ 不正解。　') + q.explanation;
+    fb.className   = 'feedback-box show ' + (isCorrect ? 'ok' : 'ng');
+
+    document.getElementById('btn-next').disabled = false;
+    const correct = answers.filter(a => a === true).length;
+    document.getElementById('q-correct-label').textContent = '正解 ' + correct + ' 問';
+  }
+
+  function nextQuestion() {
+    currentQ++;
+    if (currentQ >= QUESTIONS.length) { finishTest(); return; }
+    renderQuestion();
+  }
+
+  /* ─────────────── FINISH ─────────────── */
+  function finishTest() {
+    clearInterval(timerInterval);
+    show('screen-result');
+    renderResult();
+  }
+
+  /* ─────────────── RESULT ─────────────── */
+  function renderResult() {
+    const total = answers.filter(a => a === true).length;
+    const pct   = Math.round((total / QUESTIONS.length) * 100);
+
+    document.getElementById('score-big').textContent = total;
+
+    let title, sub;
+    if      (pct >= 87) { title = '素晴らしい結果です！';  sub = '全体的によく理解できています。'; }
+    else if (pct >= 60) { title = 'もう少しで完璧！';       sub = '苦手単元を重点的に復習しましょう。'; }
+    else                { title = '基礎から見直そう！';     sub = '焦らず、単元ごとに丁寧に復習しましょう。'; }
+
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-sub').textContent   = '正答率 ' + pct + '%';
+
+    /* 単元別集計 */
+    const stats = {};
+    Object.keys(UNITS).forEach(k => { stats[k] = { correct: 0, total: 0 }; });
+    QUESTIONS.forEach((q, i) => {
+      stats[q.unit].total++;
+      if (answers[i] === true) stats[q.unit].correct++;
+    });
+
+    /* 単元別バー（正答率低い順） */
+    const sorted = Object.entries(stats).sort(
+      (a, b) => (a[1].correct / a[1].total) - (b[1].correct / b[1].total)
+    );
+
+    const analysis = document.getElementById('unit-analysis');
+    analysis.innerHTML = '';
+    sorted.forEach(([uid, stat]) => {
+      const u = UNITS[uid];
+      const p = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
+      let color, icon;
+      if      (p >= 80) { color = '#3B6D11'; icon = '○'; }
+      else if (p >= 50) { color = '#BA7517'; icon = '△'; }
+      else              { color = '#E24B4A'; icon = '✗'; }
+
+      const row = document.createElement('div');
+      row.className = 'unit-row';
+      row.innerHTML =
+        '<div class="unit-row-icon" style="color:' + color + '">' + icon + '</div>' +
+        '<div class="unit-row-info">' +
+          '<div class="unit-row-name">' + u.name + '</div>' +
+          '<div class="unit-row-sub">' + u.grade + '&nbsp;·&nbsp;' + stat.correct + '/' + stat.total + '問正解</div>' +
+        '</div>' +
+        '<div class="unit-bar-wrap">' +
+          '<div class="unit-bar-track">' +
+            '<div class="unit-bar-fill" style="width:' + p + '%;background:' + color + '"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="unit-pct" style="color:' + color + '">' + p + '%</div>';
+      analysis.appendChild(row);
+    });
+
+    /* 復習カード */
+    const review = document.getElementById('review-section');
+    review.innerHTML = '';
+
+    const weak = sorted.filter(([, s]) => s.total > 0 && (s.correct / s.total) < 0.8);
+    if (weak.length === 0) {
+      const card = document.createElement('div');
+      card.className = 'review-card good';
+      card.innerHTML =
+        '<div class="review-card-header">' +
+          '<span class="priority-badge badge-ok">全単元クリア</span>' +
+        '</div>' +
+        '<div class="review-desc">すべての単元で高い正答率です。定期的に復習して知識を定着させましょう。</div>';
+      review.appendChild(card);
+      return;
+    }
+
+    weak.forEach(([uid, stat]) => {
+      const u   = UNITS[uid];
+      const p   = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
+      const isHigh = p < 50;
+      const card = document.createElement('div');
+      card.className = 'review-card ' + (isHigh ? '' : 'medium');
+      const tips = (REVIEW_TIPS[uid] || []).map(t => '<li>' + t + '</li>').join('');
+      card.innerHTML =
+        '<div class="review-card-header">' +
+          '<span class="priority-badge ' + (isHigh ? 'badge-high' : 'badge-medium') + '">' +
+            (isHigh ? '優先復習' : '要復習') +
+          '</span>' +
+          '<span class="review-unit-name">' + u.name + '（' + u.grade + '）</span>' +
+        '</div>' +
+        '<div class="review-desc">' + u.desc + '</div>' +
+        '<div class="review-tips"><ul>' + tips + '</ul></div>';
+      review.appendChild(card);
+    });
+  }
+</script>
+</body>
+</html>
